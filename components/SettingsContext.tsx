@@ -14,8 +14,11 @@ const defaultSettings: AppSettings = {
   enablePromoterCode: 'true',
   
   // Grafica Defaults
+  designStyle: 'glass',
+  bgType: 'dots',
   bgColor: '#000000',
-  bgDotColor: '#262626', // Default grigio scuro
+  bgDotColor: '#262626', 
+  bgDotActiveColor: '#ef4444',
   primaryColor: '#ffffff',
   secondaryColor: '#9ca3af',
   accentColor: '#ef4444',

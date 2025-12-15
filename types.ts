@@ -43,6 +43,9 @@ export interface ScanResult {
   type: 'success' | 'error' | 'warning' | 'promoter';
 }
 
+export type DesignStyle = 'glass' | 'minimal' | 'brutal' | 'soft';
+export type BackgroundType = 'dots' | 'grid' | 'liquid';
+
 export interface AppSettings {
   // Evento
   eventName: string;
@@ -56,12 +59,15 @@ export interface AppSettings {
   enablePromoterCode: string;
 
   // Grafica
-  bgColor: string;      // Sfondo
-  bgDotColor: string;   // Punti Sfondo (NUOVO)
+  designStyle: DesignStyle; 
+  bgType: BackgroundType;
+  bgColor: string;
+  bgDotColor: string;
+  bgDotActiveColor: string; 
   primaryColor: string; 
   secondaryColor: string;
   accentColor: string;  
-  buttonColor: string;  // Pulsanti
+  buttonColor: string;
 
   // Limiti
   maxGuests: string;
