@@ -1,0 +1,17 @@
+russoloco.it {
+	reverse_proxy localhost:3000
+}
+
+www.russoloco.it {
+	reverse_proxy localhost:3000
+}
+
+# - sottodomini
+
+dash.russoloco.it {
+	redir https://russoloco.it/#/admin
+}
+
+scan.russoloco.it {
+	redir https://russoloco.it/#/scanner
+}
