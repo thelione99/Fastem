@@ -10,6 +10,7 @@ import Button from '../components/Button';
 import QRCode from 'react-qr-code';
 import StepProgress from '../components/StepProgress';
 import { useToast } from '../components/Toast';
+import { useSettings } from '../components/SettingsContext'; // IMPORTATO
 import { GuestCardSkeleton } from '../components/Skeleton';
 import { AnalyticsChart } from '../components/AnalyticsChart';
 import { 
@@ -86,7 +87,7 @@ const GuestCard = React.memo(({ guest, onApprove, onReject, onDelete, onManualCh
            )}
         </div>
 
-        {/* Footer Actions - RIPRISTINATO STILE ORIGINALE (Padding instead of Height) */}
+        {/* Footer Actions */}
         <div className="mt-auto pt-3 border-t border-white/5">
             {isApproved ? (
               <div className="flex items-center justify-between gap-3">
@@ -130,6 +131,7 @@ const GuestCard = React.memo(({ guest, onApprove, onReject, onDelete, onManualCh
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const settings = useSettings(); // USO SETTINGS PER IL LOGO
 
   const [activeTab, setActiveTab] = useState<'GUESTS' | 'PROMOTERS'>('GUESTS');
   const [loading, setLoading] = useState(true);
@@ -267,10 +269,25 @@ const Dashboard: React.FC = () => {
       <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-4 md:px-8 py-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
-                <h1 className="text-2xl font-black text-white flex items-center gap-2 tracking-tighter">
-                    RUSSO<span className="text-red-600">LOCO</span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-[10px] text-red-400 font-bold tracking-widest uppercase">Admin</span>
+                
+                {/* LOGO DINAMICO UNIFORMATO ALLA HOME */}
+                <h1 
+                    className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-b flex items-center gap-2 tracking-tighter uppercase"
+                    style={{ backgroundImage: `linear-gradient(to bottom, ${settings.primaryColor}, ${settings.secondaryColor})` }}
+                >
+                    {settings.eventName}
+                    <span 
+                        className="px-2.5 py-0.5 rounded-full border text-[10px] font-bold tracking-widest uppercase"
+                        style={{ 
+                            backgroundColor: `${settings.accentColor}20`, 
+                            borderColor: `${settings.accentColor}40`, 
+                            color: settings.accentColor 
+                        }}
+                    >
+                        Admin
+                    </span>
                 </h1>
+
                 <div className="md:hidden flex gap-2">
                     <Button onClick={() => setRefreshKey(p => p + 1)} variant="secondary" className="!p-2"><RefreshCw size={16} /></Button>
                     <Button onClick={handleLogout} variant="secondary" className="!p-2 text-red-500"><LogOut size={16} /></Button>
@@ -322,7 +339,6 @@ const Dashboard: React.FC = () => {
                     </div>
                     
                     <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
-                        {/* ZONA FILTRI RIPRISTINATA ORIGINALE */}
                         <div className="relative flex bg-neutral-900/90 backdrop-blur-xl p-1 rounded-xl border border-white/10 items-center">
                              {(() => {
                                  const options = [
@@ -335,7 +351,6 @@ const Dashboard: React.FC = () => {
                                  
                                  return (
                                      <div className="relative grid grid-cols-4 gap-0 w-auto">
-                                         {/* Glider Sfondo */}
                                          <div 
                                             className="absolute top-1 bottom-1 w-full rounded-lg bg-white shadow-[0_0_15px_rgba(255,255,255,0.4)] transition-transform duration-500 ease-out z-0" 
                                             style={{ 
@@ -344,8 +359,6 @@ const Dashboard: React.FC = () => {
                                                 transform: `translateX(${activeIndex * 100}%)` 
                                             }} 
                                          />
-                                         
-                                         {/* Bottoni (Padding Based) */}
                                          {options.map((f) => (
                                              <button 
                                                 key={f.id} 

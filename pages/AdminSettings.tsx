@@ -9,7 +9,7 @@ import {
   Save, ArrowLeft, Calendar, Palette, Type, 
   MapPin, Instagram, Lock, RotateCcw, LayoutTemplate, 
   Eye, Download, Upload, Smartphone, Zap, Check, Layers, 
-  Grid, CircleDot, Waves
+  Grid, CircleDot, Waves, Sparkles, MousePointer2
 } from 'lucide-react';
 import logo from "../components/logo.png";
 
@@ -141,38 +141,30 @@ const AdminSettings: React.FC = () => {
     <button 
       type="button"
       onClick={() => setActiveSection(id)}
-      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
+      className={`relative group flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
         activeSection === id 
-        ? 'bg-white text-black border-white shadow-lg scale-105' 
-        : 'text-gray-400 border-transparent hover:text-white hover:bg-white/5'
+        ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-105' 
+        : 'text-gray-500 hover:text-white hover:bg-white/5'
       }`}
     >
-      <Icon size={14} /> {label}
+      <Icon size={14} className={`transition-transform duration-300 ${activeSection === id ? 'rotate-0' : 'group-hover:rotate-12'}`} /> 
+      {label}
     </button>
   );
 
   const ColorInput = ({ label, name, value }: any) => (
-    <div className="space-y-1.5 group">
-        <div className="flex justify-between items-center">
-            <label className="text-[9px] text-gray-400 uppercase font-bold tracking-wider group-hover:text-white transition-colors">{label}</label>
-            <span className="text-[9px] font-mono text-gray-600 group-hover:text-gray-400 transition-colors">{value}</span>
+    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors group">
+        <div className="flex flex-col">
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider group-hover:text-gray-200 transition-colors">{label}</span>
+            <span className="text-[10px] font-mono text-gray-600 group-hover:text-gray-500">{value}</span>
         </div>
-        <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl p-1.5 pr-3 hover:border-white/30 transition-all focus-within:border-white/50 focus-within:ring-1 focus-within:ring-white/20">
-            <div className="relative w-8 h-8 shrink-0 overflow-hidden rounded-lg shadow-inner ring-1 ring-white/10">
-                <input 
-                    type="color" 
-                    name={name} 
-                    value={value} 
-                    onChange={handleChange} 
-                    className="absolute inset-0 w-[150%] h-[150%] -top-1/4 -left-1/4 p-0 m-0 border-0 cursor-pointer" 
-                />
-            </div>
+        <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white/10 shadow-inner group-hover:scale-110 transition-transform cursor-pointer">
             <input 
-                type="text" 
+                type="color" 
                 name={name} 
                 value={value} 
                 onChange={handleChange} 
-                className="w-full bg-transparent border-none text-white text-xs font-mono focus:ring-0 outline-none uppercase" 
+                className="absolute inset-[-50%] w-[200%] h-[200%] cursor-pointer p-0 m-0 border-0" 
             />
         </div>
     </div>
@@ -182,21 +174,19 @@ const AdminSettings: React.FC = () => {
       <button 
         type="button"
         onClick={onClick}
-        className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${
+        className={`relative flex-1 p-4 rounded-xl border transition-all duration-300 flex flex-col items-center gap-3 overflow-hidden ${
             current === id 
-            ? 'bg-white text-black border-white shadow-lg scale-105' 
-            : 'bg-black/40 border-white/10 text-gray-400 hover:border-white/30 hover:text-white'
+            ? 'bg-white text-black border-white shadow-[0_0_25px_rgba(255,255,255,0.2)] scale-105 z-10' 
+            : 'bg-black/40 border-white/10 text-gray-500 hover:border-white/20 hover:text-gray-300'
         }`}
       >
-          {Icon ? <Icon size={20} /> : (
-              <div className={`w-8 h-8 border border-current ${
-                  id === 'glass' ? 'rounded-lg' : 
-                  id === 'soft' ? 'rounded-full' : 
-                  id === 'brutal' ? 'rounded-none border-2' : 
-                  'rounded-sm'
-              }`} />
-          )}
-          <span className="text-[9px] font-bold uppercase tracking-widest">{label}</span>
+          <div className="relative z-10 flex flex-col items-center gap-2">
+            {Icon ? <Icon size={20} /> : <div className="w-5 h-5 rounded border-2 border-current" />}
+            <span className="text-[9px] font-black uppercase tracking-[0.2em]">{label}</span>
+          </div>
+          
+          {/* Active Indicator Background */}
+          {current === id && <div className="absolute inset-0 bg-gradient-to-tr from-gray-200 to-white opacity-100 z-0" />}
       </button>
   );
 
@@ -211,7 +201,8 @@ const AdminSettings: React.FC = () => {
         style={{ backgroundColor: settings.bgColor }}
         >
         
-        <div className="absolute inset-0 opacity-30 pointer-events-none">
+        {/* Background Layer */}
+        <div className="absolute inset-0 opacity-40 pointer-events-none">
             {settings.bgType === 'grid' && (
                 <div className="w-full h-full" style={{ 
                     backgroundImage: `linear-gradient(${settings.bgDotColor} 1px, transparent 1px), linear-gradient(90deg, ${settings.bgDotColor} 1px, transparent 1px)`, 
@@ -220,219 +211,276 @@ const AdminSettings: React.FC = () => {
             )}
             {settings.bgType === 'dots' && (
                 <div className="w-full h-full" style={{ 
-                    backgroundImage: `radial-gradient(${settings.bgDotColor} 1px, transparent 1px)`, 
+                    backgroundImage: `radial-gradient(${settings.bgDotColor} 1.5px, transparent 1.5px)`, 
                     backgroundSize: '20px 20px' 
                 }} />
             )}
             {settings.bgType === 'liquid' && (
                 <>
-                    <div className="absolute top-0 left-0 w-32 h-32 rounded-full blur-2xl opacity-50" style={{ backgroundColor: settings.primaryColor }} />
-                    <div className="absolute bottom-0 right-0 w-40 h-40 rounded-full blur-2xl opacity-50" style={{ backgroundColor: settings.accentColor }} />
+                    <div className="absolute top-[-20%] left-[-20%] w-[150%] h-[80%] rounded-full blur-[60px] opacity-40 animate-pulse-slow" style={{ backgroundColor: settings.primaryColor }} />
+                    <div className="absolute bottom-[-20%] right-[-20%] w-[120%] h-[80%] rounded-full blur-[60px] opacity-40 animate-float" style={{ backgroundColor: settings.accentColor }} />
                 </>
             )}
         </div>
         
-        <div className="relative z-10 w-full flex flex-col items-center text-center space-y-6 scale-90 md:scale-100 origin-center animate-in fade-in zoom-in duration-700">
+        {/* Content Layer */}
+        <div className="relative z-10 w-full flex flex-col items-center text-center space-y-8 scale-90 md:scale-100 origin-center">
             <div className="relative group">
-                <div className="absolute inset-0 blur-[50px] opacity-40 rounded-full transition-colors duration-500" style={{ backgroundColor: settings.primaryColor }} />
-                <img src={logo} alt="Logo" className="w-24 h-24 object-contain relative z-10 rounded-xl drop-shadow-2xl" style={{ borderRadius: radius }} />
+                <div className="absolute inset-0 blur-[40px] opacity-30 rounded-full transition-colors duration-500" style={{ backgroundColor: settings.primaryColor }} />
+                <img src={logo} alt="Logo" className="w-20 h-20 object-contain relative z-10 drop-shadow-2xl" />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
                 <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b uppercase tracking-tighter leading-none"
                     style={{ backgroundImage: `linear-gradient(to bottom, ${settings.primaryColor}, ${settings.secondaryColor})` }}>
                     {settings.eventName || 'EVENT NAME'}
                 </h1>
-                <p className="text-xs font-medium italic tracking-wide uppercase opacity-80" style={{ color: settings.secondaryColor }}>
-                    "{settings.eventSubtitle || 'Private Access Only'}"
+                <p className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-70" style={{ color: settings.accentColor }}>
+                    {settings.eventSubtitle || 'SUBTITLE'}
                 </p>
             </div>
 
-            <div className="text-[10px] font-mono tracking-[0.2em] py-2 px-4 border bg-white/5 backdrop-blur-sm text-gray-400"
-                 style={{ borderRadius: radius, border }}>
-                {settings.eventDate} • {settings.eventTime}
-            </div>
-
-            <div className="w-full max-w-[200px] h-12 flex items-center justify-center text-xs font-black tracking-[0.2em] text-white uppercase transition-all"
-                style={{ 
-                    background: settings.buttonColor, 
-                    borderRadius: radius,
-                    border: settings.designStyle === 'brutal' ? '2px solid white' : 'none',
-                    boxShadow: shadow
-                }}>
-                ENTRA ORA
-            </div>
-
-            {settings.enableLocation === 'true' && (
-                <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest mt-4 opacity-60" style={{ color: settings.secondaryColor }}>
-                    <MapPin size={10} style={{ color: settings.accentColor }} />
-                    {settings.eventLocation}
+            <div className="flex flex-col gap-3 w-full max-w-[200px]">
+                <div className="text-[9px] font-mono tracking-widest py-3 border bg-white/5 backdrop-blur-md text-gray-300 flex justify-center items-center gap-2"
+                    style={{ borderRadius: radius, border }}>
+                    <span>{settings.eventDate}</span>
+                    <span className="w-1 h-1 bg-white/30 rounded-full"/>
+                    <span>{settings.eventTime}</span>
                 </div>
-            )}
+
+                <div className="h-12 flex items-center justify-center text-[10px] font-black tracking-[0.2em] text-white uppercase transition-all cursor-pointer relative overflow-hidden group"
+                    style={{ 
+                        background: settings.buttonColor, 
+                        borderRadius: radius,
+                        border: settings.designStyle === 'brutal' ? '2px solid white' : 'none',
+                        boxShadow: shadow
+                    }}>
+                    <span className="relative z-10">ENTRA ORA</span>
+                    {settings.designStyle !== 'minimal' && (
+                        <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" />
+                    )}
+                </div>
+            </div>
         </div>
         
-        {/* OS Bar */}
-        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full" />
+        {/* Notch & Bar */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-50 flex items-center justify-center">
+            <div className="w-16 h-2 bg-neutral-900 rounded-full" />
+        </div>
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full z-50 mix-blend-difference" />
         </div>
     );
   }, [settings]);
 
+  // Reusable Form Field
+  const InputField = ({ label, name, icon: Icon, ...props }: any) => (
+      <div className="group space-y-1.5">
+          <label className="text-[9px] text-gray-500 uppercase font-bold tracking-widest ml-1 flex items-center gap-1.5 group-focus-within:text-white transition-colors">
+              {Icon && <Icon size={10} />} {label}
+          </label>
+          <div className="relative">
+              <input 
+                  name={name} 
+                  value={(settings as any)[name]} 
+                  onChange={handleChange} 
+                  className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm text-white placeholder-gray-700 focus:border-white/30 focus:ring-1 focus:ring-white/20 outline-none transition-all"
+                  {...props} 
+              />
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/5 to-transparent opacity-0 group-focus-within:opacity-100 pointer-events-none transition-opacity duration-500" />
+          </div>
+      </div>
+  );
+
   return (
     <div className="min-h-screen w-full bg-transparent text-white flex flex-col">
       
-      {/* HEADER */}
-      <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-4 md:px-8 py-3 flex justify-between items-center shadow-lg">
+      {/* TOP BAR */}
+      <header className="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex justify-between items-center shadow-2xl">
         <div className="flex items-center gap-4">
-          <Button onClick={() => navigate('/admin')} variant="secondary" className="!p-2 rounded-full hover:bg-white/10"><ArrowLeft size={20} /></Button>
+          <Button onClick={() => navigate('/admin')} variant="secondary" className="!p-2 rounded-full hover:bg-white/10 border-white/10"><ArrowLeft size={18} /></Button>
           <div className="hidden md:block">
-              <h1 className="text-lg font-bold text-white leading-none">Configurazione</h1>
-              <p className="text-[10px] text-gray-500 uppercase tracking-widest">Pannello Admin</p>
+              <h1 className="text-sm font-black text-white tracking-wider">CONFIGURAZIONE</h1>
+              <p className="text-[9px] text-gray-500 uppercase tracking-widest">Personalizza l'esperienza</p>
           </div>
         </div>
         
-        <div className="flex gap-2">
-            <div className="hidden md:flex gap-2 mr-2 border-r border-white/10 pr-4">
-                <Button onClick={importConfig} variant="ghost" className="text-[10px] !px-3" title="Importa JSON"><Upload size={14} className="mr-2"/> Importa</Button>
-                <Button onClick={exportConfig} variant="ghost" className="text-[10px] !px-3" title="Copia JSON"><Download size={14} className="mr-2"/> Esporta</Button>
+        <div className="flex items-center gap-3">
+            <div className="hidden md:flex gap-1 mr-4">
+                <Button onClick={importConfig} variant="ghost" className="text-[10px] !px-3 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white"><Upload size={12} className="mr-2"/> Importa</Button>
+                <Button onClick={exportConfig} variant="ghost" className="text-[10px] !px-3 hover:bg-white/5 rounded-lg text-gray-400 hover:text-white"><Download size={12} className="mr-2"/> Esporta</Button>
             </div>
-            <Button onClick={handleReset} variant="secondary" className="text-xs !px-3 bg-red-950/20 text-red-400 border-red-500/20 hover:bg-red-950/40">
+            <div className="h-6 w-px bg-white/10 mx-1 hidden md:block" />
+            <Button onClick={handleReset} variant="ghost" className="text-[10px] !px-3 text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded-lg">
                 <RotateCcw size={14} className="md:mr-2" /> <span className="hidden md:inline">RESET</span>
             </Button>
-            <Button onClick={handleSave} isLoading={loading} className="text-xs font-bold px-4 md:px-6 shadow-lg shadow-red-900/20">
-                <Save size={16} className="md:mr-2" /> <span className="hidden md:inline">SALVA</span>
+            <Button onClick={handleSave} isLoading={loading} className="text-xs font-bold px-6 py-2.5 bg-white text-black hover:bg-gray-200 border-none rounded-lg shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all">
+                <Save size={16} className="md:mr-2" /> <span className="hidden md:inline">SALVA MODIFICHE</span>
             </Button>
         </div>
       </header>
 
-      <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative">
+      <main className="flex-1 p-4 md:p-8 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start relative">
         
-        {/* LEFT COLUMN: CONTROLS */}
-        <div className="lg:col-span-7 space-y-6 pb-24 lg:pb-0">
+        {/* LEFT COLUMN: SETTINGS */}
+        <div className="lg:col-span-7 space-y-8 pb-32 lg:pb-0">
             
-            {/* TABS */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sticky top-20 z-30 py-2 -mx-4 px-4 md:mx-0 md:px-0 bg-gradient-to-b from-black via-black/90 to-transparent lg:static lg:bg-none">
+            {/* Navigation Tabs */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide sticky top-20 z-30 py-2 -mx-4 px-4 md:mx-0 md:px-0 bg-gradient-to-b from-black via-black/95 to-transparent lg:static lg:bg-none">
                 <NavButton id="info" icon={LayoutTemplate} label="Contenuti" />
-                <NavButton id="design" icon={Palette} label="Design & Stile" />
+                <NavButton id="design" icon={Palette} label="Design" />
                 <NavButton id="limits" icon={Lock} label="Accessi" />
             </div>
 
-            <form onSubmit={handleSave} className="space-y-6 animate-in slide-in-from-left-4 duration-500">
+            <form onSubmit={handleSave} className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
                 
-                {/* SECTION: INFO */}
+                {/* --- TAB: INFO --- */}
                 {activeSection === 'info' && (
-                    <GlassPanel intensity="high" className="p-6 space-y-6 border-t-4 border-t-blue-500">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3 text-blue-400">
-                                <div className="p-2 bg-blue-500/10 rounded-lg"><Type size={20} /></div>
-                                <h2 className="text-lg font-bold text-white">Dettagli Evento</h2>
-                            </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div className="space-y-1.5"><label className="text-[10px] text-gray-400 uppercase font-bold ml-1">Nome Evento</label><input name="eventName" value={settings.eventName} onChange={handleChange} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none transition-all" placeholder="RUSSOLOCO" /></div>
-                            <div className="space-y-1.5"><label className="text-[10px] text-gray-400 uppercase font-bold ml-1">Sottotitolo</label><input name="eventSubtitle" value={settings.eventSubtitle} onChange={handleChange} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none transition-all" /></div>
-                            <div className="space-y-1.5"><label className="text-[10px] text-gray-400 uppercase font-bold ml-1 flex items-center gap-2"><Calendar size={10} /> Data</label><input name="eventDate" value={settings.eventDate} onChange={handleChange} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none transition-all" /></div>
-                            <div className="space-y-1.5"><label className="text-[10px] text-gray-400 uppercase font-bold ml-1">Orario</label><input name="eventTime" value={settings.eventTime} onChange={handleChange} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none transition-all" /></div>
-
-                            <div className="md:col-span-2 space-y-1.5">
-                                <div className="flex justify-between items-center px-1">
-                                    <label className="text-[10px] text-gray-400 uppercase font-bold flex items-center gap-2"><MapPin size={10} /> Location</label>
-                                    <label className="flex items-center gap-2 cursor-pointer group">
-                                        <span className={`text-[9px] font-bold transition-colors ${settings.enableLocation === 'true' ? 'text-green-400' : 'text-gray-500'}`}>{settings.enableLocation === 'true' ? 'VISIBILE' : 'NASCOSTA'}</span>
-                                        <div className={`w-8 h-4 rounded-full p-0.5 transition-colors ${settings.enableLocation === 'true' ? 'bg-green-500' : 'bg-gray-600'}`} onClick={() => toggle('enableLocation')}>
-                                            <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${settings.enableLocation === 'true' ? 'translate-x-4' : 'translate-x-0'}`} />
-                                        </div>
-                                    </label>
-                                </div>
-                                <input name="eventLocation" value={settings.eventLocation} onChange={handleChange} className={`w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none transition-all ${settings.enableLocation === 'false' ? 'opacity-50 grayscale cursor-not-allowed' : ''}`} disabled={settings.enableLocation === 'false'} />
-                            </div>
-
-                            <div className="md:col-span-2 space-y-1.5"><label className="text-[10px] text-gray-400 uppercase font-bold ml-1">Descrizione</label><textarea name="eventDescription" value={settings.eventDescription} onChange={handleChange} rows={2} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none resize-none transition-all" /></div>
-                            <div className="md:col-span-2 space-y-1.5"><label className="text-[10px] text-gray-400 uppercase font-bold ml-1 flex items-center gap-2"><Instagram size={10} /> Instagram URL</label><input name="instagramUrl" value={settings.instagramUrl} onChange={handleChange} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-pink-500/50 outline-none transition-all text-xs font-mono text-blue-300" /></div>
-                        </div>
-                    </GlassPanel>
-                )}
-
-                {/* SECTION: DESIGN */}
-                {activeSection === 'design' && (
                     <div className="space-y-6">
-                        {/* PRESETS */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {THEMES.map(theme => (
-                                <button key={theme.id} type="button" onClick={() => applyTheme(theme)} className="group relative overflow-hidden rounded-xl border border-white/10 hover:border-white/30 transition-all text-left">
-                                    <div className="h-12 w-full" style={{ background: `linear-gradient(135deg, ${theme.colors.bgColor} 0%, ${theme.colors.accentColor} 100%)` }} />
-                                    <div className="p-3 bg-black/60 backdrop-blur-sm"><p className="text-[10px] font-bold text-white uppercase tracking-wider">{theme.name}</p></div>
-                                    {settings.bgColor === theme.colors.bgColor && <div className="absolute top-1 right-1 bg-white text-black rounded-full p-0.5"><Check size={10} /></div>}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* STILE STRUTTURALE */}
-                        <GlassPanel intensity="high" className="p-6 space-y-4 border-t-4 border-t-pink-500">
-                            <h2 className="text-lg font-bold flex items-center gap-2 text-pink-400"><Layers size={20} /> Stile Grafico</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <GlassPanel intensity="low" className="p-6 space-y-6 border-l-2 border-l-blue-500 bg-neutral-900/40">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-400 border border-blue-500/20"><Type size={20} /></div>
                                 <div>
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block">Struttura</label>
-                                    <div className="flex gap-2">
-                                        <StyleCard id="glass" label="Glass" current={settings.designStyle} onClick={() => setDesignStyle('glass')} />
-                                        <StyleCard id="minimal" label="Minimal" current={settings.designStyle} onClick={() => setDesignStyle('minimal')} />
-                                        <StyleCard id="brutal" label="Brutal" current={settings.designStyle} onClick={() => setDesignStyle('brutal')} />
-                                        <StyleCard id="soft" label="Soft" current={settings.designStyle} onClick={() => setDesignStyle('soft')} />
-                                    </div>
+                                    <h2 className="text-base font-bold text-white">Identità Evento</h2>
+                                    <p className="text-[10px] text-gray-500">Informazioni principali visibili nella landing page.</p>
                                 </div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block">Tipo Sfondo</label>
-                                    <div className="flex gap-2">
-                                        <StyleCard id="dots" label="Punti" current={settings.bgType} onClick={() => setBgType('dots')} icon={CircleDot} />
-                                        <StyleCard id="grid" label="Griglia" current={settings.bgType} onClick={() => setBgType('grid')} icon={Grid} />
-                                        <StyleCard id="liquid" label="Liquido" current={settings.bgType} onClick={() => setBgType('liquid')} icon={Waves} />
-                                    </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <InputField label="Nome Evento" name="eventName" placeholder="RUSSOLOCO" />
+                                <InputField label="Sottotitolo" name="eventSubtitle" placeholder="Private Party" />
+                                <InputField label="Data" name="eventDate" placeholder="25 Dic" icon={Calendar} />
+                                <InputField label="Orario" name="eventTime" placeholder="23:00 - 05:00" />
+                                
+                                <div className="md:col-span-2 space-y-2 pt-2">
+                                    <label className="text-[9px] text-gray-500 uppercase font-bold tracking-widest ml-1">Descrizione</label>
+                                    <textarea name="eventDescription" value={settings.eventDescription} onChange={handleChange} rows={3} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm text-white focus:border-white/30 outline-none resize-none transition-all" />
                                 </div>
                             </div>
                         </GlassPanel>
 
-                        {/* COLORI */}
-                        <GlassPanel intensity="high" className="p-6 space-y-6 border-t-4 border-t-purple-500">
-                            <h2 className="text-lg font-bold flex items-center gap-2 text-purple-400"><Palette size={20} /> Palette Colori</h2>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-6">
-                                <ColorInput label="Sfondo Base" name="bgColor" value={settings.bgColor} />
-                                <ColorInput label="Elementi Sfondo" name="bgDotColor" value={settings.bgDotColor} />
-                                <ColorInput label="Elementi Attivi" name="bgDotActiveColor" value={settings.bgDotActiveColor} />
-                                <ColorInput label="Titolo (Inizio)" name="primaryColor" value={settings.primaryColor} />
-                                <ColorInput label="Titolo (Fine)" name="secondaryColor" value={settings.secondaryColor} />
-                                <ColorInput label="Accento / Icone" name="accentColor" value={settings.accentColor} />
-                                <ColorInput label="Pulsanti" name="buttonColor" value={settings.buttonColor} />
+                        <GlassPanel intensity="low" className="p-6 border-l-2 border-l-indigo-500 bg-neutral-900/40">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20"><MapPin size={20} /></div>
+                                <h2 className="text-base font-bold text-white">Logistica & Social</h2>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <InputField label="Luogo Evento" name="eventLocation" placeholder="Secret Location" icon={MapPin} disabled={settings.enableLocation === 'false'} />
+                                <div className="flex items-end pb-3">
+                                    <label className="flex items-center gap-3 cursor-pointer group w-full p-2 rounded-xl border border-white/5 hover:bg-white/5 transition-all">
+                                        <div className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-300 ${settings.enableLocation === 'true' ? 'bg-indigo-500' : 'bg-gray-700'}`} onClick={() => toggle('enableLocation')}>
+                                            <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${settings.enableLocation === 'true' ? 'translate-x-5' : 'translate-x-0'}`} />
+                                        </div>
+                                        <span className="text-xs font-bold text-gray-300 group-hover:text-white">Mostra Location</span>
+                                    </label>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <InputField label="Link Instagram" name="instagramUrl" placeholder="https://instagram.com/..." icon={Instagram} />
+                                </div>
                             </div>
                         </GlassPanel>
                     </div>
                 )}
 
-                {/* SECTION: LIMITS */}
-                {activeSection === 'limits' && (
-                    <GlassPanel intensity="high" className="p-6 space-y-6 border-t-4 border-t-red-500">
-                        <div className="flex items-center gap-3 text-red-400 mb-2">
-                            <div className="p-2 bg-red-500/10 rounded-lg"><Lock size={20} /></div>
-                            <h2 className="text-lg font-bold text-white">Limiti & Sicurezza</h2>
+                {/* --- TAB: DESIGN --- */}
+                {activeSection === 'design' && (
+                    <div className="space-y-6">
+                        {/* THEME PRESETS */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {THEMES.map(theme => (
+                                <button key={theme.id} type="button" onClick={() => applyTheme(theme)} className="group relative overflow-hidden rounded-2xl border border-white/10 hover:border-white/40 transition-all text-left h-24 shadow-lg">
+                                    <div className="absolute inset-0 opacity-80 transition-opacity group-hover:opacity-100" 
+                                         style={{ background: `linear-gradient(135deg, ${theme.colors.bgColor} 0%, ${theme.colors.primaryColor} 50%, ${theme.colors.accentColor} 100%)` }} />
+                                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] group-hover:backdrop-blur-none transition-all" />
+                                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
+                                        <p className="text-[10px] font-bold text-white uppercase tracking-wider flex items-center justify-between">
+                                            {theme.name}
+                                            {settings.bgColor === theme.colors.bgColor && <div className="bg-white text-black rounded-full p-0.5"><Check size={8} /></div>}
+                                        </p>
+                                    </div>
+                                </button>
+                            ))}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] text-gray-400 uppercase font-bold ml-1">Capienza Max Ospiti</label>
-                                <input type="number" name="maxGuests" value={settings.maxGuests} onChange={handleChange} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-red-500/50 outline-none font-mono text-lg tracking-widest" />
-                                <p className="text-[10px] text-gray-500 ml-1">Blocca registrazioni al raggiungimento.</p>
+                            {/* STRUTTURA */}
+                            <GlassPanel intensity="low" className="p-6 space-y-4 bg-neutral-900/40">
+                                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2 mb-4"><Layers size={14} /> Layout & Stile</h2>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <StyleCard id="glass" label="Glass" current={settings.designStyle} onClick={() => setDesignStyle('glass')} icon={Sparkles} />
+                                    <StyleCard id="minimal" label="Minimal" current={settings.designStyle} onClick={() => setDesignStyle('minimal')} icon={MousePointer2} />
+                                    <StyleCard id="brutal" label="Brutal" current={settings.designStyle} onClick={() => setDesignStyle('brutal')} icon={LayoutTemplate} />
+                                    <StyleCard id="soft" label="Soft" current={settings.designStyle} onClick={() => setDesignStyle('soft')} icon={CircleDot} />
+                                </div>
+                                <div className="pt-2">
+                                    <label className="text-[9px] font-bold text-gray-500 uppercase mb-2 block">Pattern Sfondo</label>
+                                    <div className="flex gap-2">
+                                        <StyleCard id="dots" label="Dots" current={settings.bgType} onClick={() => setBgType('dots')} icon={CircleDot} />
+                                        <StyleCard id="grid" label="Grid" current={settings.bgType} onClick={() => setBgType('grid')} icon={Grid} />
+                                        <StyleCard id="liquid" label="Liquid" current={settings.bgType} onClick={() => setBgType('liquid')} icon={Waves} />
+                                    </div>
+                                </div>
+                            </GlassPanel>
+
+                            {/* COLORI */}
+                            <GlassPanel intensity="low" className="p-6 space-y-4 bg-neutral-900/40">
+                                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2 mb-4"><Palette size={14} /> Palette Cromatica</h2>
+                                <div className="space-y-3">
+                                    <div className="p-3 rounded-xl bg-black/20 border border-white/5 space-y-3">
+                                        <p className="text-[9px] text-gray-500 font-bold uppercase">Sfondo</p>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            <ColorInput label="Base Background" name="bgColor" value={settings.bgColor} />
+                                            <ColorInput label="Elementi Pattern" name="bgDotColor" value={settings.bgDotColor} />
+                                        </div>
+                                    </div>
+                                    <div className="p-3 rounded-xl bg-black/20 border border-white/5 space-y-3">
+                                        <p className="text-[9px] text-gray-500 font-bold uppercase">Brand</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <ColorInput label="Titolo Start" name="primaryColor" value={settings.primaryColor} />
+                                            <ColorInput label="Titolo End" name="secondaryColor" value={settings.secondaryColor} />
+                                            <ColorInput label="Accento" name="accentColor" value={settings.accentColor} />
+                                            <ColorInput label="Bottoni" name="buttonColor" value={settings.buttonColor} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </GlassPanel>
+                        </div>
+                    </div>
+                )}
+
+                {/* --- TAB: LIMITS --- */}
+                {activeSection === 'limits' && (
+                    <GlassPanel intensity="low" className="p-6 space-y-6 border-l-2 border-l-red-500 bg-neutral-900/40">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2.5 bg-red-500/10 rounded-xl text-red-400 border border-red-500/20"><Lock size={20} /></div>
+                            <div>
+                                <h2 className="text-base font-bold text-white">Sicurezza & Capienza</h2>
+                                <p className="text-[10px] text-gray-500">Gestisci i limiti delle registrazioni.</p>
                             </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] text-gray-400 uppercase font-bold ml-1">Limite Promoter</label>
-                                <input type="number" name="maxPromoters" value={settings.maxPromoters} onChange={handleChange} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-red-500/50 outline-none font-mono text-lg tracking-widest" />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] text-gray-400 uppercase font-bold ml-1">Capienza Ospiti</label>
+                                <div className="relative">
+                                    <input type="number" name="maxGuests" value={settings.maxGuests} onChange={handleChange} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:border-red-500/50 outline-none font-mono text-xl tracking-widest font-bold" />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-600 font-bold">PAX</div>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] text-gray-400 uppercase font-bold ml-1">Capienza Promoter</label>
+                                <div className="relative">
+                                    <input type="number" name="maxPromoters" value={settings.maxPromoters} onChange={handleChange} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:border-red-500/50 outline-none font-mono text-xl tracking-widest font-bold" />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-600 font-bold">PR</div>
+                                </div>
                             </div>
                             
-                            <div className="md:col-span-2 p-4 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center cursor-pointer hover:bg-white/10 transition-colors" onClick={() => toggle('enablePromoterCode')}>
+                            <div className="md:col-span-2 p-4 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center cursor-pointer hover:bg-white/10 transition-colors group" onClick={() => toggle('enablePromoterCode')}>
                                 <div>
-                                    <p className="font-bold text-sm text-white">Campo Codice PR</p>
-                                    <p className="text-xs text-gray-400">Mostra il campo opzionale nel form di registrazione.</p>
+                                    <p className="font-bold text-sm text-white group-hover:text-green-400 transition-colors">Richiedi Codice PR</p>
+                                    <p className="text-xs text-gray-500">Se attivo, mostra un campo opzionale nel form di registrazione.</p>
                                 </div>
-                                <div className={`w-10 h-6 rounded-full p-1 transition-colors ${settings.enablePromoterCode === 'true' ? 'bg-green-500' : 'bg-gray-600'}`}>
-                                    <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform ${settings.enablePromoterCode === 'true' ? 'translate-x-4' : 'translate-x-0'}`} />
+                                <div className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 ${settings.enablePromoterCode === 'true' ? 'bg-green-500' : 'bg-gray-700'}`}>
+                                    <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${settings.enablePromoterCode === 'true' ? 'translate-x-6' : 'translate-x-0'}`} />
                                 </div>
                             </div>
                         </div>
@@ -443,18 +491,28 @@ const AdminSettings: React.FC = () => {
         </div>
 
         {/* RIGHT COLUMN: STICKY PREVIEW */}
-        <div className="hidden lg:block lg:col-span-5 relative">
-            <div className="sticky top-28 space-y-4">
+        <div className="hidden lg:block lg:col-span-5 relative pl-8">
+            <div className="sticky top-28 space-y-6">
                 <div className="flex items-center justify-between px-2">
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Smartphone size={14} /> Anteprima Live</span>
-                    {loading && <span className="text-xs text-red-400 animate-pulse flex items-center gap-1"><Zap size={10} /> Sync...</span>}
+                    {loading && <span className="text-xs text-green-400 animate-pulse flex items-center gap-1"><Zap size={10} /> Syncing...</span>}
                 </div>
-                <div className="w-full aspect-[9/18] rounded-[2.5rem] border-[8px] border-neutral-900 bg-black shadow-2xl relative overflow-hidden ring-1 ring-white/10">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-neutral-900 rounded-b-xl z-30" />
-                    {LivePreviewContent}
+                
+                {/* MOCKUP DEVICE */}
+                <div className="relative mx-auto border-gray-800 bg-gray-800 border-[14px] rounded-[2.5rem] h-[600px] w-[300px] shadow-2xl flex flex-col justify-start overflow-hidden ring-1 ring-white/10">
+                    <div className="h-[32px] bg-gray-800 w-full absolute top-0 left-0 right-0 z-20 rounded-t-[1.5rem]"></div>
+                    <div className="h-[46px] w-[3px] bg-gray-800 absolute -left-[17px] top-[124px] rounded-l-lg"></div>
+                    <div className="h-[46px] w-[3px] bg-gray-800 absolute -left-[17px] top-[178px] rounded-l-lg"></div>
+                    <div className="h-[64px] w-[3px] bg-gray-800 absolute -right-[17px] top-[142px] rounded-r-lg"></div>
+                    <div className="rounded-[2rem] overflow-hidden w-full h-full bg-black relative">
+                        {LivePreviewContent}
+                    </div>
                 </div>
-                <div className="text-center">
-                    <p className="text-[10px] text-gray-600">L'anteprima riflette lo stile e i colori selezionati.</p>
+
+                <div className="text-center px-8">
+                    <p className="text-[10px] text-gray-600 leading-relaxed">
+                        L'anteprima mostra come apparirà la landing page sui dispositivi degli utenti in base alle impostazioni correnti.
+                    </p>
                 </div>
             </div>
         </div>
@@ -469,9 +527,9 @@ const AdminSettings: React.FC = () => {
 
         {/* MOBILE PREVIEW MODAL */}
         {showMobilePreview && (
-            <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200" onClick={() => setShowMobilePreview(false)}>
-                <div className="w-full max-w-sm aspect-[9/18] rounded-[2.5rem] border-[8px] border-neutral-800 bg-black shadow-2xl relative overflow-hidden" onClick={e => e.stopPropagation()}>
-                    <div className="absolute top-4 right-4 z-50 p-2 bg-black/50 rounded-full text-white cursor-pointer" onClick={() => setShowMobilePreview(false)}>
+            <div className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-200" onClick={() => setShowMobilePreview(false)}>
+                <div className="relative mx-auto border-gray-800 bg-gray-800 border-[10px] rounded-[2.5rem] h-[80vh] w-full max-w-sm shadow-2xl flex flex-col justify-start overflow-hidden" onClick={e => e.stopPropagation()}>
+                    <div className="absolute top-4 right-4 z-50 p-2 bg-black/50 rounded-full text-white cursor-pointer backdrop-blur-md border border-white/10" onClick={() => setShowMobilePreview(false)}>
                         <ArrowLeft size={20} />
                     </div>
                     {LivePreviewContent}
