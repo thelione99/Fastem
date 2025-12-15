@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom'; // Import necessario per leggere l'URL
 import GlassPanel from '../components/GlassPanel';
 import Button from '../components/Button';
 import { createRequest } from '../services/storage';
-import { User, Mail, Instagram, Send, Calendar, Clock, Info } from 'lucide-react';
+import { useToast } from '../components/Toast'; // Assicurati di avere il componente Toast
+import { User, Mail, Instagram, Send, Calendar, Clock, Info, CheckCircle, Lock } from 'lucide-react';
 
 const Home: React.FC = () => {
+  const [searchParams] = useSearchParams(); // Hook per i parametri URL
+  const { addToast } = useToast();
+  
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -14,6 +19,16 @@ const Home: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isCodeLocked, setIsCodeLocked] = useState(false); // Nuovo stato per bloccare l'input
+
+  // EFFETTO: Controlla se c'è un codice nell'URL appena la pagina carica
+  useEffect(() => {
+      const refCode = searchParams.get('ref'); // Legge ?ref=CODICE
+      if (refCode) {
+          setFormData(prev => ({ ...prev, promoterCode: refCode.toUpperCase() }));
+          setIsCodeLocked(true); // Blocca il campo
+      }
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -25,8 +40,10 @@ const Home: React.FC = () => {
     try {
       await createRequest(formData);
       setSubmitted(true);
-    } catch (error) {
+      addToast('Richiesta inviata con successo!', 'success');
+    } catch (error: any) {
       console.error(error);
+      addToast(error.message || 'Errore durante l\'invio', 'error');
     } finally {
       setLoading(false);
     }
@@ -47,7 +64,7 @@ const Home: React.FC = () => {
           <p className="text-gray-300 leading-relaxed">
             La tua richiesta è in fase di valutazione.
             <br />
-            Per non perdere aggiornamenti sull'approvazione, segui la pagina ufficiale.
+            Segui la pagina ufficiale per aggiornamenti.
           </p>
           <div className="pt-4">
             <Button variant="primary" onClick={handleInstagramRedirect} className="w-full">
@@ -138,17 +155,33 @@ const Home: React.FC = () => {
 
             <div className="pt-2 border-t border-white/5 mt-4">
                 <div className="space-y-2">
-                    <label className="text-xs text-gray-500 uppercase tracking-wider pl-1 flex justify-between">
+                    <label className="text-xs text-gray-500 uppercase tracking-wider pl-1 flex justify-between items-center">
                         <span>Codice PR / Invito</span>
-                        <span className="text-[10px] text-gray-600 lowercase">(opzionale)</span>
+                        {isCodeLocked ? (
+                            <span className="text-[10px] text-green-400 flex items-center gap-1 font-bold animate-pulse">
+                                <CheckCircle size={10} /> LINK ATTIVO
+                            </span>
+                        ) : (
+                            <span className="text-[10px] text-gray-600 lowercase">(opzionale)</span>
+                        )}
                     </label>
-                    <input
-                        name="promoterCode"
-                        value={formData.promoterCode}
-                        onChange={(e) => setFormData(prev => ({ ...prev, promoterCode: e.target.value.toUpperCase() }))}
-                        placeholder="Es. MARIO25"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white text-center tracking-widest placeholder-gray-700 focus:outline-none focus:border-red-500/50 transition-all"
-                    />
+                    <div className="relative">
+                        <input
+                            name="promoterCode"
+                            value={formData.promoterCode}
+                            onChange={(e) => setFormData(prev => ({ ...prev, promoterCode: e.target.value.toUpperCase() }))}
+                            readOnly={isCodeLocked} // Blocca scrittura se arriva da link
+                            placeholder="Es. MARIO25"
+                            className={`w-full border rounded-xl py-3 px-4 text-white text-center tracking-widest placeholder-gray-700 focus:outline-none transition-all ${
+                                isCodeLocked 
+                                ? 'bg-green-900/10 border-green-500/30 text-green-400 cursor-not-allowed font-bold' 
+                                : 'bg-white/5 border-white/10 focus:border-red-500/50'
+                            }`}
+                        />
+                        {isCodeLocked && (
+                            <Lock className="absolute right-3 top-3.5 w-4 h-4 text-green-500/50" />
+                        )}
+                    </div>
                 </div>
             </div>
 

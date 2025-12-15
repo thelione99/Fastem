@@ -1,6 +1,7 @@
 import React from 'react';
 
-interface GlassPanelProps {
+// Estendiamo HTMLAttributes per accettare onClick, style, ecc.
+interface GlassPanelProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   intensity?: 'low' | 'medium' | 'high';
@@ -11,7 +12,8 @@ const GlassPanel: React.FC<GlassPanelProps> = ({
   children, 
   className = '', 
   intensity = 'medium',
-  borderRed = false
+  borderRed = false,
+  ...props // Catturiamo tutte le altre props (come onClick)
 }) => {
   const bgOpacity = {
     low: 'bg-neutral-900/40',
@@ -30,13 +32,16 @@ const GlassPanel: React.FC<GlassPanelProps> = ({
     : 'border-white/10';
 
   return (
-    <div className={`
-      relative overflow-hidden rounded-2xl border shadow-2xl
-      ${bgOpacity[intensity]} 
-      ${backdrop[intensity]} 
-      ${borderColor}
-      ${className}
-    `}>
+    <div 
+      className={`
+        relative overflow-hidden rounded-2xl border shadow-2xl
+        ${bgOpacity[intensity]} 
+        ${backdrop[intensity]} 
+        ${borderColor}
+        ${className}
+      `}
+      {...props} // Passiamo le props al div (fondamentale per onClick)
+    >
       {/* Subtle shine effect */}
       <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
       <div className="relative z-10 h-full">
