@@ -272,7 +272,6 @@ const AdminSettings: React.FC = () => {
     );
   }, [settings]);
 
-  // Reusable Form Field
   const InputField = ({ label, name, icon: Icon, ...props }: any) => (
       <div className="group space-y-1.5">
           <label className="text-[9px] text-gray-500 uppercase font-bold tracking-widest ml-1 flex items-center gap-1.5 group-focus-within:text-white transition-colors">
@@ -313,7 +312,9 @@ const AdminSettings: React.FC = () => {
             <Button onClick={handleReset} variant="ghost" className="text-[10px] !px-3 text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded-lg">
                 <RotateCcw size={14} className="md:mr-2" /> <span className="hidden md:inline">RESET</span>
             </Button>
-            <Button onClick={handleSave} isLoading={loading} className="text-xs font-bold px-6 py-2.5 bg-white text-black hover:bg-gray-200 border-none rounded-lg shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all">
+            
+            {/* FIX: Bottone Salva Ripulito */}
+            <Button onClick={handleSave} isLoading={loading} className="text-xs font-bold px-6 py-2.5 shadow-xl">
                 <Save size={16} className="md:mr-2" /> <span className="hidden md:inline">SALVA MODIFICHE</span>
             </Button>
         </div>

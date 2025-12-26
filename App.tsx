@@ -7,7 +7,6 @@ import LiquidBackground from './components/LiquidBackground';
 import { SettingsProvider, useSettings } from './components/SettingsContext';
 import { ToastProvider } from './components/Toast';
 
-// Lazy Load
 const Landing = lazy(() => import('./pages/Landing'));
 const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -27,14 +26,12 @@ const ThemeInjector: React.FC = () => {
   useEffect(() => {
     const root = document.documentElement;
     
-    // Colori Base
     root.style.setProperty('--theme-bg', settings.bgColor);
     root.style.setProperty('--theme-primary', settings.primaryColor);
     root.style.setProperty('--theme-secondary', settings.secondaryColor);
     root.style.setProperty('--theme-accent', settings.accentColor);
     root.style.setProperty('--theme-btn', settings.buttonColor);
 
-    // Stili Strutturali
     switch (settings.designStyle) {
         case 'minimal':
             root.style.setProperty('--theme-radius', '4px');
@@ -61,8 +58,8 @@ const ThemeInjector: React.FC = () => {
         default:
             root.style.setProperty('--theme-radius', '16px');
             root.style.setProperty('--theme-border-width', '1px');
-            root.style.setProperty('--theme-blur', '16px');
-            root.style.setProperty('--theme-glass-opacity', '0.6');
+            root.style.setProperty('--theme-blur', '24px'); // Aumentato da 16 a 24 per più effetto "sfocato"
+            root.style.setProperty('--theme-glass-opacity', '0.3'); // Opacità base ridotta drasticamente
             root.style.setProperty('--theme-shadow', '0 8px 32px 0 rgba(0, 0, 0, 0.36)');
             break;
     }
@@ -70,7 +67,6 @@ const ThemeInjector: React.FC = () => {
     document.title = settings.eventName || "RUSSOLOCO";
   }, [settings]);
 
-  // Renderizza lo sfondo in base al tipo scelto
   const renderBackground = () => {
       switch(settings.bgType) {
           case 'grid': return <GridPattern />;
@@ -93,7 +89,6 @@ const ThemeInjector: React.FC = () => {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none transition-colors duration-700" style={{ backgroundColor: settings.bgColor }}>
         {renderBackground()}
-        {/* Overlay comune per uniformità */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/80 pointer-events-none" />
     </div>
   );

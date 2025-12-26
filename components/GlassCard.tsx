@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logo from "../components/logo.png";
 import { useSettings } from './SettingsContext';
+import Button from './Button'; // Assicurati di usare il componente Button aggiornato
 
 export const GlassCard: React.FC = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export const GlassCard: React.FC = () => {
     "Il caos ti attende.", "Red Passion.", "Chiudi gli occhi."
   ];
 
-  // Typing Effect
+  // Typing Effect (Invariato)
   useEffect(() => {
     let index1 = 0;
     const timer1 = setInterval(() => {
@@ -57,26 +58,6 @@ export const GlassCard: React.FC = () => {
 
   const handleEnter = () => {
     navigate('/register');
-  };
-
-  // Stili dinamici per il bottone in base al designStyle
-  const getButtonStyle = () => {
-      const base = {
-          backgroundColor: settings.buttonColor,
-          color: '#ffffff',
-          boxShadow: `0 0 20px ${settings.buttonColor}40`,
-          borderRadius: 'var(--theme-radius)', // Usa la variabile globale iniettata da App.tsx
-          border: 'none'
-      };
-
-      if (settings.designStyle === 'brutal') {
-          return { ...base, border: '2px solid white', boxShadow: '4px 4px 0px white', borderRadius: '0px' };
-      }
-      if (settings.designStyle === 'minimal') {
-          return { ...base, backgroundColor: 'transparent', border: `1px solid ${settings.buttonColor}`, color: settings.buttonColor, boxShadow: 'none' };
-      }
-      // Glass & Soft usano i default (pieni)
-      return base;
   };
 
   return (
@@ -125,22 +106,13 @@ export const GlassCard: React.FC = () => {
         </p>
       </div>
 
-      {/* BOTTONE ENTRA DINAMICO */}
-      <button 
+      {/* BOTTONE: Ora usiamo il componente Button 'smart' senza override manuali */}
+      <Button 
         onClick={handleEnter} 
-        className="group relative px-12 py-4 overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-3 font-bold tracking-[0.2em] uppercase text-sm"
-        style={getButtonStyle()}
+        className="px-12 py-4 text-sm font-bold tracking-[0.2em] uppercase"
       >
-        <span>ENTRA</span>
-        <ArrowRight 
-          className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" 
-        />
-        
-        {/* Shine Effect solo per stili pieni */}
-        {settings.designStyle !== 'minimal' && (
-            <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" />
-        )}
-      </button>
+        ENTRA <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+      </Button>
 
     </div>
   );
