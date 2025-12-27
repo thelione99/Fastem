@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   getGuests, approveRequest, rejectRequest, resetData, 
-  getPromoters, createPromoter, deleteGuest, manualCheckIn, updateGuest, resendQREmail 
+  getPromoters, createPromoter, updatePromoter, deletePromoter, deleteGuest, manualCheckIn, updateGuest, resendQREmail 
 } from '../services/storage';
 import { Guest, RequestStatus, Promoter, LevelConfig } from '../types';
 import GlassPanel from '../components/GlassPanel';
@@ -10,14 +10,14 @@ import Button from '../components/Button';
 import QRCode from 'react-qr-code';
 import StepProgress from '../components/StepProgress';
 import { useToast } from '../components/Toast';
-import { useSettings } from '../components/SettingsContext'; // IMPORTATO
+import { useSettings } from '../components/SettingsContext'; 
 import { GuestCardSkeleton } from '../components/Skeleton';
 import { AnalyticsChart } from '../components/AnalyticsChart';
 import { 
   Check, X, Search, RefreshCw, Trash2, 
   Users, UserCheck, Clock, Activity, Plus, Crown, LogOut, QrCode, XCircle,
   LayoutGrid, Grid3X3, StretchHorizontal, Filter, ChevronRight, ChevronLeft, 
-  Settings, Download, LogIn, Edit2, Link as LinkIcon, Save, Mail, RotateCcw
+  Settings, Download, LogIn, Edit2, Link as LinkIcon, Save, Mail, RotateCcw, List, Eye
 } from 'lucide-react';
 
 // --- HOOKS ---
@@ -131,7 +131,7 @@ const GuestCard = React.memo(({ guest, onApprove, onReject, onDelete, onManualCh
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const settings = useSettings(); // USO SETTINGS PER IL LOGO
+  const settings = useSettings(); 
 
   const [activeTab, setActiveTab] = useState<'GUESTS' | 'PROMOTERS'>('GUESTS');
   const [loading, setLoading] = useState(true);
@@ -148,10 +148,18 @@ const Dashboard: React.FC = () => {
   const debouncedSearch = useDebounce(searchTerm, 500);
 
   const [showPromoterModal, setShowPromoterModal] = useState(false);
+  const [editingPromoter, setEditingPromoter] = useState<Promoter | null>(null);
+  
+  // STATI PER LA MODALE DETTAGLI PR
+  const [viewDetailsPromoter, setViewDetailsPromoter] = useState<Promoter | null>(null);
+  const [promoterGuests, setPromoterGuests] = useState<Guest[]>([]);
+  const [promoterGuestsLoading, setPromoterGuestsLoading] = useState(false);
+
   const [viewQrPromoter, setViewQrPromoter] = useState<Promoter | null>(null);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   
   const [newPR, setNewPR] = useState({ firstName: '', lastName: '', code: '', password: '' });
+  
   const [numLevels, setNumLevels] = useState(5);
   const [levelsConfig, setLevelsConfig] = useState<LevelConfig[]>([
       { level: 1, threshold: 5, reward: 'Free Drink' }, { level: 2, threshold: 15, reward: 'Pass Backstage' }, { level: 3, threshold: 30, reward: 'Tavolo VIP' },
@@ -207,15 +215,80 @@ const Dashboard: React.FC = () => {
       }
   };
 
+  const handleOpenPromoterDetails = async (pr: Promoter) => {
+      setViewDetailsPromoter(pr);
+      setPromoterGuestsLoading(true);
+      try {
+          // Usiamo getGuests filtrando per il codice del PR tramite il parametro "search"
+          const res = await getGuests(1, 1000, pr.code, 'ALL');
+          // Filtriamo ulteriormente lato client per sicurezza, per evitare match parziali se il codice è comune
+          const exactMatches = res.data.filter(g => g.invitedBy === pr.code);
+          setPromoterGuests(exactMatches);
+      } catch (e) {
+          addToast("Errore caricamento lista invitati", "error");
+      } finally {
+          setPromoterGuestsLoading(false);
+      }
+  };
+
+  const resetPromoterForm = () => {
+      setNewPR({ firstName: '', lastName: '', code: '', password: '' });
+      setNumLevels(5);
+      setLevelsConfig([
+        { level: 1, threshold: 5, reward: 'Free Drink' }, { level: 2, threshold: 15, reward: 'Pass Backstage' }, { level: 3, threshold: 30, reward: 'Tavolo VIP' },
+        { level: 4, threshold: 50, reward: 'Bottiglia' }, { level: 5, threshold: 100, reward: 'Royal Pass' }
+      ]);
+  };
+
   const handleCreatePromoter = async (e: React.FormEvent) => {
       e.preventDefault();
       const finalLevels = levelsConfig.slice(0, numLevels);
       await handleAction(async () => {
           await createPromoter({ ...newPR, rewardsConfig: finalLevels });
           setShowPromoterModal(false);
-          setNewPR({ firstName: '', lastName: '', code: '', password: '' });
+          resetPromoterForm();
       }, "Promoter creato con successo");
   }
+
+  const handleUpdatePromoter = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!editingPromoter) return;
+      const finalLevels = levelsConfig.slice(0, numLevels);
+      await handleAction(async () => {
+          await updatePromoter({ 
+              id: editingPromoter.id,
+              firstName: editingPromoter.firstName,
+              lastName: editingPromoter.lastName,
+              code: editingPromoter.code,
+              password: (editingPromoter as any).password,
+              rewardsConfig: finalLevels
+          });
+          setEditingPromoter(null);
+      }, "Promoter aggiornato");
+  };
+
+  const handleDeletePromoter = async (id: string) => {
+      if(window.confirm("Sei sicuro? Questo eliminerà il promoter ma manterrà gli invitati.")) {
+          await handleAction(async () => {
+              await deletePromoter(id);
+          }, "Promoter eliminato");
+      }
+  };
+
+  const openEditPromoter = (pr: Promoter) => {
+      let config: LevelConfig[] = [];
+      try {
+          config = typeof pr.rewards_config === 'string' ? JSON.parse(pr.rewards_config) : pr.rewards_config as unknown as LevelConfig[];
+      } catch(e) { config = []; }
+      
+      const fullConfig = Array.from({length: 5}).map((_, i) => {
+          return config[i] || { level: i+1, threshold: (i+1)*10, reward: '' };
+      });
+      
+      setLevelsConfig(fullConfig);
+      setNumLevels(config.length > 0 ? config.length : 1);
+      setEditingPromoter(pr);
+  };
 
   const handleUpdateGuest = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -270,7 +343,6 @@ const Dashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
                 
-                {/* LOGO DINAMICO UNIFORMATO ALLA HOME */}
                 <h1 
                     className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-b flex items-center gap-2 tracking-tighter uppercase"
                     style={{ backgroundImage: `linear-gradient(to bottom, ${settings.primaryColor}, ${settings.secondaryColor})` }}
@@ -391,7 +463,7 @@ const Dashboard: React.FC = () => {
                    <div className="text-center py-32 opacity-50 flex flex-col items-center">
                        <Search size={48} className="mb-4 text-gray-600" />
                        <p className="text-gray-400 font-bold text-lg">Nessun risultato trovato</p>
-                       <p className="text-gray-600 text-sm">Prova a cambiare i filtri o la ricerca</p>
+                       <p className="text-gray-400 text-sm">Prova a cambiare i filtri o la ricerca</p>
                    </div>
                 ) : (
                     <>
@@ -450,7 +522,15 @@ const Dashboard: React.FC = () => {
                 {loading ? <div className="text-center py-20 text-gray-500">Caricamento...</div> : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {promoters.map((pr) => (
-                            <GlassPanel key={pr.id} className="p-0 relative overflow-hidden flex flex-col justify-between h-full min-h-[220px] group hover:border-red-500/30 transition-colors" intensity="medium">
+                            // RIMOSSO overflow-hidden per evitare il taglio dei tooltip
+                            <GlassPanel key={pr.id} className="p-0 relative flex flex-col justify-between h-full min-h-[220px] group hover:border-red-500/30 transition-colors" intensity="medium">
+                                {/* ACTION BUTTONS FOR PROMOTER */}
+                                <div className="absolute top-2 right-2 flex gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 backdrop-blur-md rounded-lg p-1 border border-white/10 shadow-lg">
+                                    <button onClick={() => handleOpenPromoterDetails(pr)} className="p-1.5 rounded-md text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors" title="Lista Invitati"><Eye size={14} /></button>
+                                    <button onClick={() => openEditPromoter(pr)} className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors" title="Modifica"><Edit2 size={14} /></button>
+                                    <button onClick={() => handleDeletePromoter(pr.id)} className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition-colors" title="Elimina"><Trash2 size={14} /></button>
+                                </div>
+
                                 <div className="p-6 relative z-10">
                                     <div className="flex justify-between items-start mb-6">
                                         <div className="flex items-center gap-4">
@@ -473,7 +553,7 @@ const Dashboard: React.FC = () => {
                                         <StepProgress currentInvites={pr.invites_count} levels={(pr.rewards_config as any) || []} />
                                     </div>
                                 </div>
-                                <div className="mt-auto px-6 py-4 bg-white/5 border-t border-white/5 flex justify-between items-center">
+                                <div className="mt-auto px-6 py-4 bg-white/5 border-t border-white/5 flex justify-between items-center rounded-b-2xl">
                                     <button onClick={() => copyPromoterLink(pr.code)} className="flex items-center gap-2 text-[10px] bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded border border-white/10 text-gray-300 hover:text-white transition-colors"><LinkIcon size={12} /> Copia Link</button>
                                     <button onClick={() => setViewQrPromoter(pr)} className="flex items-center gap-2 text-xs font-bold text-gray-300 hover:text-white px-3 py-1.5 hover:bg-white/10 rounded-lg transition-all group/btn"><QrCode size={14} /> QR CODE <ChevronRight size={14} className="opacity-0 group-hover/btn:opacity-100 -translate-x-2 group-hover/btn:translate-x-0 transition-all" /></button>
                                 </div>
@@ -509,6 +589,53 @@ const Dashboard: React.FC = () => {
           </div>
       )}
 
+      {/* MODALE LISTA INVITATI PROMOTER */}
+      {viewDetailsPromoter && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm" onClick={() => setViewDetailsPromoter(null)}>
+            <GlassPanel className="max-w-2xl w-full p-8 border-white/10 shadow-2xl max-h-[80vh] flex flex-col" intensity="high" onClick={(e: any) => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 className="text-xl font-bold text-white flex items-center gap-2"><List size={20} className="text-blue-400" /> Resoconto: {viewDetailsPromoter.firstName}</h3>
+                        <p className="text-xs text-gray-400">Codice: <span className="text-white font-mono">{viewDetailsPromoter.code}</span></p>
+                    </div>
+                    <button onClick={() => setViewDetailsPromoter(null)} className="text-gray-500 hover:text-white bg-white/5 p-2 rounded-full hover:bg-white/10 transition-colors"><X size={18} /></button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto pr-2 space-y-2">
+                    {promoterGuestsLoading ? (
+                        <div className="text-center py-10 text-gray-500">Caricamento lista...</div>
+                    ) : promoterGuests.length === 0 ? (
+                        <div className="text-center py-10 text-gray-500 font-bold">Nessun invitato trovato con questo codice.</div>
+                    ) : (
+                        promoterGuests.map(g => (
+                            <div key={g.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5">
+                                <div>
+                                    <p className="text-sm font-bold text-white">{g.firstName} {g.lastName}</p>
+                                    <p className="text-[10px] text-gray-500">{new Date(g.createdAt).toLocaleDateString()} alle {new Date(g.createdAt).toLocaleTimeString()}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {g.isUsed ? (
+                                        <span className="px-2 py-1 rounded bg-green-500/20 text-green-400 text-[9px] font-bold border border-green-500/20">ENTRATO</span>
+                                    ) : g.status === 'APPROVED' ? (
+                                        <span className="px-2 py-1 rounded bg-blue-500/20 text-blue-400 text-[9px] font-bold border border-blue-500/20">APPROVATO</span>
+                                    ) : g.status === 'REJECTED' ? (
+                                        <span className="px-2 py-1 rounded bg-red-500/20 text-red-400 text-[9px] font-bold border border-red-500/20">RIFIUTATO</span>
+                                    ) : (
+                                        <span className="px-2 py-1 rounded bg-yellow-500/20 text-yellow-400 text-[9px] font-bold border border-yellow-500/20">ATTESA</span>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+                <div className="pt-4 mt-4 border-t border-white/10 text-right">
+                    <p className="text-xs font-bold text-gray-400">Totale: <span className="text-white text-lg">{promoterGuests.length}</span></p>
+                </div>
+            </GlassPanel>
+        </div>
+      )}
+
+      {/* CREATE PROMOTER MODAL */}
       {showPromoterModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
               <GlassPanel className="max-w-md w-full p-8 border-red-500/30 shadow-[0_0_50px_rgba(220,38,38,0.2)]" intensity="high">
@@ -531,7 +658,16 @@ const Dashboard: React.FC = () => {
                       <div><label className="text-[10px] text-gray-400 uppercase font-bold ml-1 mb-1 block">Password Accesso</label><input required type="password" value={newPR.password} onChange={e => setNewPR(p => ({...p, password: e.target.value}))} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-red-500/50 outline-none" /></div>
                       
                       <div className="pt-2 border-t border-white/10 mt-4">
-                          <label className="text-xs font-bold text-gray-400 mb-2 block">Livelli Ricompensa (Max 5)</label>
+                          <div className="flex items-center justify-between mb-2">
+                              <label className="text-xs font-bold text-gray-400">Livelli Ricompensa</label>
+                              <div className="flex gap-1">
+                                  {[1,2,3,4,5].map(n => (
+                                      <button key={n} type="button" onClick={() => setNumLevels(n)} className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold transition-colors ${numLevels === n ? 'bg-red-500 text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}>
+                                          {n}
+                                      </button>
+                                  ))}
+                              </div>
+                          </div>
                           {levelsConfig.slice(0, numLevels).map((lvl, idx) => (
                               <div key={idx} className="flex gap-2 mb-2">
                                   <input type="number" placeholder="Inviti" value={lvl.threshold} onChange={(e) => {
@@ -545,6 +681,57 @@ const Dashboard: React.FC = () => {
                       </div>
 
                       <Button type="submit" className="w-full mt-2 h-12 shadow-red-900/20">SALVA PROMOTER</Button>
+                  </form>
+              </GlassPanel>
+          </div>
+      )}
+
+      {/* EDIT PROMOTER MODAL */}
+      {editingPromoter && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+              <GlassPanel className="max-w-md w-full p-8 border-blue-500/30 shadow-[0_0_50px_rgba(59,130,246,0.2)]" intensity="high">
+                  <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2"><Edit2 size={20} className="text-blue-500" /> Modifica Promoter</h3>
+                      <button onClick={() => setEditingPromoter(null)} className="text-gray-500 hover:text-white bg-white/5 p-2 rounded-full hover:bg-white/10 transition-colors"><X size={18} /></button>
+                  </div>
+                  <form onSubmit={handleUpdatePromoter} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                          <div><label className="text-[10px] text-gray-400 uppercase font-bold ml-1 mb-1 block">Nome</label><input required value={editingPromoter.firstName} onChange={e => setEditingPromoter({...editingPromoter, firstName: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none" /></div>
+                          <div><label className="text-[10px] text-gray-400 uppercase font-bold ml-1 mb-1 block">Cognome</label><input required value={editingPromoter.lastName} onChange={e => setEditingPromoter({...editingPromoter, lastName: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none" /></div>
+                      </div>
+                      <div>
+                          <label className="text-[10px] text-gray-400 uppercase font-bold ml-1 mb-1 block">Codice Univoco</label>
+                          <div className="relative">
+                            <input required value={editingPromoter.code} onChange={e => setEditingPromoter({...editingPromoter, code: e.target.value.toUpperCase().replace(/\s/g, '')})} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 pl-10 text-white font-mono tracking-widest focus:border-blue-500/50 outline-none uppercase" placeholder="MARIO25" />
+                            <div className="absolute left-3 top-3.5 text-gray-500 font-bold text-xs">#</div>
+                          </div>
+                      </div>
+                      <div><label className="text-[10px] text-gray-400 uppercase font-bold ml-1 mb-1 block">Password Accesso</label><input required type="text" value={(editingPromoter as any).password} onChange={e => setEditingPromoter({...editingPromoter, password: e.target.value} as any)} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none" /></div>
+                      
+                      <div className="pt-2 border-t border-white/10 mt-4">
+                          <div className="flex items-center justify-between mb-2">
+                              <label className="text-xs font-bold text-gray-400">Livelli Ricompensa</label>
+                              <div className="flex gap-1">
+                                  {[1,2,3,4,5].map(n => (
+                                      <button key={n} type="button" onClick={() => setNumLevels(n)} className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold transition-colors ${numLevels === n ? 'bg-blue-600 text-white' : 'bg-white/10 text-gray-400 hover:bg-white/20'}`}>
+                                          {n}
+                                      </button>
+                                  ))}
+                              </div>
+                          </div>
+                          {levelsConfig.slice(0, numLevels).map((lvl, idx) => (
+                              <div key={idx} className="flex gap-2 mb-2">
+                                  <input type="number" placeholder="Inviti" value={lvl.threshold} onChange={(e) => {
+                                      const newL = [...levelsConfig]; newL[idx].threshold = parseInt(e.target.value); setLevelsConfig(newL);
+                                  }} className="w-20 bg-black/30 border border-white/10 rounded-lg p-2 text-white text-center text-xs" />
+                                  <input placeholder="Premio" value={lvl.reward} onChange={(e) => {
+                                      const newL = [...levelsConfig]; newL[idx].reward = e.target.value; setLevelsConfig(newL);
+                                  }} className="flex-1 bg-black/30 border border-white/10 rounded-lg p-2 text-white text-xs" />
+                              </div>
+                          ))}
+                      </div>
+
+                      <Button type="submit" className="w-full mt-2 h-12 shadow-blue-900/20 bg-blue-600 hover:bg-blue-500 border-blue-400/30">AGGIORNA PROMOTER</Button>
                   </form>
               </GlassPanel>
           </div>

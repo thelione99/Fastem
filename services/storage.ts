@@ -47,5 +47,7 @@ export const scanQRCode = async (qrContent: string): Promise<ScanResult> => { tr
 export const resetData = async (): Promise<void> => { await apiCall('reset', 'POST'); };
 export const getPromoters = async (): Promise<Promoter[]> => { return await apiCall<Promoter[]>('admin/promoters'); };
 export const createPromoter = async (data: any): Promise<void> => { await apiCall('admin/create-promoter', 'POST', data); };
+export const updatePromoter = async (data: any): Promise<void> => { await apiCall('admin/update-promoter', 'POST', data); };
+export const deletePromoter = async (id: string): Promise<void> => { await apiCall('admin/delete-promoter', 'POST', { id }); };
 export const getSettings = async (): Promise<AppSettings> => { return await apiCall<AppSettings>('settings'); };
 export const updateSettings = async (settings: AppSettings): Promise<void> => { await apiCall('admin/settings', 'POST', settings); };

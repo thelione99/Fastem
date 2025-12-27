@@ -343,6 +343,53 @@ app.post('/api/admin/create-promoter', checkAuth, async (req, res) => {
    }
 });
 
+app.post('/api/admin/update-promoter', checkAuth, async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+        let { id, firstName, lastName, code, password, rewardsConfig } = req.body;
+        code = sanitize(code).toUpperCase();
+
+        // Check duplicati codice escludendo se stesso
+        const [existing] = await connection.query('SELECT id FROM promoters WHERE code = ? AND id != ?', [code, id]);
+        if (existing.length > 0) {
+            await connection.rollback();
+            return res.status(400).json({ error: 'Codice già in uso' });
+        }
+        
+        // Recupera il vecchio codice per aggiornare eventuali guest
+        const [oldPromoter] = await connection.query('SELECT code FROM promoters WHERE id = ?', [id]);
+        const oldCode = oldPromoter[0]?.code;
+
+        await connection.execute(
+            'UPDATE promoters SET firstName = ?, lastName = ?, code = ?, password = ?, rewards_config = ? WHERE id = ?',
+            [sanitize(firstName), sanitize(lastName), code, password, JSON.stringify(rewardsConfig), id]
+        );
+
+        // Se il codice è cambiato, aggiorna gli invitati esistenti
+        if (oldCode && oldCode !== code) {
+            await connection.execute('UPDATE guests SET invitedBy = ? WHERE invitedBy = ?', [code, oldCode]);
+        }
+
+        await connection.commit();
+        res.json({ success: true });
+    } catch (e) {
+        await connection.rollback();
+        res.status(500).json({ error: e.message });
+    } finally {
+        connection.release();
+    }
+});
+
+app.post('/api/admin/delete-promoter', checkAuth, async (req, res) => {
+    try {
+        await pool.execute('DELETE FROM promoters WHERE id = ?', [req.body.id]);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.post('/api/promoter/login', async (req, res) => {
   try { 
       const [rows] = await pool.query('SELECT * FROM promoters WHERE code = ? AND password = ?', [sanitize(req.body.code).toUpperCase(), req.body.password]); 

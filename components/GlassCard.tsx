@@ -3,11 +3,24 @@ import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logo from "../components/logo.png";
 import { useSettings } from './SettingsContext';
-import Button from './Button'; // Assicurati di usare il componente Button aggiornato
+
+// Helper per convertire HEX in RGB (necessario per gestire le opacità)
+const hexToRgbString = (hex: string | undefined) => {
+  if (!hex || !/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) return '220, 38, 38'; // Default Red (DC2626)
+  let c = hex.substring(1).split('');
+  if (c.length === 3) c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+  const r = parseInt(c.slice(0, 2).join(''), 16);
+  const g = parseInt(c.slice(2, 4).join(''), 16);
+  const b = parseInt(c.slice(4, 6).join(''), 16);
+  return `${r}, ${g}, ${b}`;
+};
 
 export const GlassCard: React.FC = () => {
   const navigate = useNavigate();
   const settings = useSettings();
+  
+  // Calcolo del colore RGB basato sulle impostazioni
+  const buttonRgb = hexToRgbString(settings.buttonColor);
 
   const [line1, setLine1] = useState('');
   const [line2, setLine2] = useState('');
@@ -22,7 +35,7 @@ export const GlassCard: React.FC = () => {
     "Il caos ti attende.", "Red Passion.", "Chiudi gli occhi."
   ];
 
-  // Typing Effect (Invariato)
+  // Typing Effect
   useEffect(() => {
     let index1 = 0;
     const timer1 = setInterval(() => {
@@ -60,9 +73,25 @@ export const GlassCard: React.FC = () => {
     navigate('/register');
   };
 
+  // CSS Dinamico per il bottone
+  const dynamicButtonStyle = `
+    .glass-btn-custom:hover .glass-btn-border {
+      border-color: rgba(${buttonRgb}, 0.5) !important;
+    }
+    .glass-btn-glow {
+      background-color: rgba(${buttonRgb}, 0.2) !important;
+    }
+    .glass-btn-icon {
+      color: rgb(${buttonRgb}) !important;
+    }
+  `;
+
   return (
     <div className="relative flex flex-col items-center text-center z-10 animate-in fade-in zoom-in duration-1000">
       
+      {/* Iniezione dello stile dinamico */}
+      <style>{dynamicButtonStyle}</style>
+
       {/* Logo con Glow Dinamico */}
       <div className="mb-12 relative group cursor-default">
         <div 
@@ -106,13 +135,23 @@ export const GlassCard: React.FC = () => {
         </p>
       </div>
 
-      {/* BOTTONE: Ora usiamo il componente Button 'smart' senza override manuali */}
-      <Button 
+      {/* BOTTONE DINAMICO STILE GLASS */}
+      <button 
         onClick={handleEnter} 
-        className="px-12 py-4 text-sm font-bold tracking-[0.2em] uppercase"
+        className="glass-btn-custom group relative px-10 py-4 bg-transparent overflow-hidden rounded-full transition-all duration-500 hover:scale-105 cursor-pointer"
       >
-        ENTRA <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-      </Button>
+        {/* Bordo dinamico (via classe glass-btn-border) */}
+        <div className="glass-btn-border absolute inset-0 border border-neutral-800 rounded-full transition-colors duration-500"></div>
+        
+        {/* Glow dinamico (via classe glass-btn-glow) */}
+        <div className="glass-btn-glow absolute inset-0 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        
+        <div className="relative flex items-center gap-4 text-neutral-300 group-hover:text-white transition-colors duration-300 font-light tracking-[0.2em] uppercase text-sm">
+          <span>Entra</span>
+          {/* Icona dinamica (via classe glass-btn-icon) */}
+          <ArrowRight className="glass-btn-icon w-4 h-4 -ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+        </div>
+      </button>
 
     </div>
   );
